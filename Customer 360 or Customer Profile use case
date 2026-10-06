@@ -1,0 +1,465 @@
+3. HBase Use Case: Customer 360 / Customer Profile
+
+//Business problem
+A telecom company has millions of customers. It needs very fast lookup of a customer's:
+Customer ID
+Name
+City
+Mobile number
+Plan
+Status
+Data usage
+
+
+HBase is suitable because customer information can be retrieved quickly using a Customer ID as the row key.
+
+//Flow
+Application
+    |
+    | Customer ID
+    v
++----------------------+
+|        HBase         |
+|                      |
+| customer_profiles    |
+|                      |
+| RowKey = CUST1001    |
+| RowKey = CUST1002    |
+| RowKey = CUST1003    |
++----------------------+
+    |
+    v
+Fast customer lookup
+
+
+//USE THESE:
+
+| HBase Command | Purpose                |
+
+| create      | Create table           |
+| put         | Insert / update data   |
+| get         | Read one row           |
+| scan        | Read multiple rows     |
+| delete      | Delete a column        |
+| deleteall   | Delete a row           |
+| count       | Count rows             |
+| describe    | Display table metadata |
+| disable     | Disable table          |
+| drop        | Remove table           |
+
+
+jay@jay-Lenovo-Z580:~$ hbase version
+HBase 2.6.6
+Source code repository git://buildbox.localdomain/home/apurtell/tmp/RM-2.6/hbase revision=d5f63f523c065f963992ea4e74db268d17816631
+Compiled by apurtell on Thu Jun  4 11:07:52 PDT 2026
+From source with checksum 1ecd7eaad915dcf2f8d3947134d7da47ac7955d841307962a1591078d3d8464a74df701d1f33fbc7498978b1d66533e2267434f1e2a231043c8ca8390772bbb3
+jay@jay-Lenovo-Z580:~$ start-hbase.sh
+localhost: running zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+running master, logging to /opt/hbase/logs/hbase-jay-master-jay-Lenovo-Z580.out
+: running regionserver, logging to /opt/hbase/logs/hbase-jay-regionserver-jay-Lenovo-Z580.out
+jay@jay-Lenovo-Z580:~$ jps
+3761 HQuorumPeer
+4134 Jps
+4023 HRegionServer
+3883 HMaster
+jay@jay-Lenovo-Z580:~$ hbase shell
+HBase Shell
+Use "help" to get list of supported commands.
+Use "exit" to quit this interactive shell.
+For Reference, please visit: https://hbase.apache.org/docs/shell
+Version 2.6.6, rd5f63f523c065f963992ea4e74db268d17816631, Thu Jun  4 11:07:52 PDT 2026
+Took 0.0077 seconds                                                                
+hbase:001:0> customer_profiles
+Traceback (most recent call last):
+NameError (undefined local variable or method `customer_profiles' for #<HBaseReceiver:0x63c6c5e5>)
+hbase:002:0> create 'customer_profiles', 'info'
+
+ERROR: KeeperErrorCode = NoNode for /hbase/master
+
+For usage try 'help "create"'
+
+Took 0.1023 seconds                                                                
+hbase:003:0> list
+TABLE                                                                              
+
+ERROR: KeeperErrorCode = NoNode for /hbase/master
+
+For usage try 'help "list"'
+
+Took 0.0171 seconds                                                                
+hbase:004:0> describe 'customer_profiles'
+
+ERROR: KeeperErrorCode = NoNode for /hbase/master
+
+For usage try 'help "describe"'
+
+Took 0.0103 seconds                                                                
+hbase:005:0> exit
+jay@jay-Lenovo-Z580:~$ stop-hbase.sh
+no hbase master found
+localhost: stopping zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+localhost: stopping zookeeper.
+jay@jay-Lenovo-Z580:~$ stop-hbase.sh
+no hbase master found
+localhost: stopping zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+localhost: no zookeeper to stop because no pid file /tmp/hbase-jay-zookeeper.pid
+jay@jay-Lenovo-Z580:~$ jps
+4023 HRegionServer
+6413 Jps
+jay@jay-Lenovo-Z580:~$ killall -9 java
+jay@jay-Lenovo-Z580:~$ start-hbase.sh
+localhost: running zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+running master, logging to /opt/hbase/logs/hbase-jay-master-jay-Lenovo-Z580.out
+: running regionserver, logging to /opt/hbase/logs/hbase-jay-regionserver-jay-Lenovo-Z580.out
+jay@jay-Lenovo-Z580:~$ jps
+6817 HMaster
+6695 HQuorumPeer
+7068 Jps
+6958 HRegionServer
+jay@jay-Lenovo-Z580:~$ hbase shell
+HBase Shell
+Use "help" to get list of supported commands.
+Use "exit" to quit this interactive shell.
+For Reference, please visit: https://hbase.apache.org/docs/shell
+Version 2.6.6, rd5f63f523c065f963992ea4e74db268d17816631, Thu Jun  4 11:07:52 PDT 2026
+Took 0.0182 seconds                                                                
+hbase:001:0> list
+TABLE                                                                              
+
+ERROR: KeeperErrorCode = NoNode for /hbase/master
+
+For usage try 'help "list"'
+
+Took 0.1358 seconds                                                                
+hbase:002:0> exit
+jay@jay-Lenovo-Z580:~$ grep -E "hbase.zookeeper.quorum|hbase.zookeeper.property.clientPort|hbase.rootdir|hbase.cluster.distributed" /opt/hbase/conf/hbase-site.xml
+        <name>hbase.rootdir</name>
+        <name>hbase.cluster.distributed</name>
+        <name>hbase.zookeeper.quorum</name>
+        <name>hbase.zookeeper.property.clientPort</name>
+jay@jay-Lenovo-Z580:~$ cat /opt/hbase/conf/hbase-site.xml
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+    <property>
+        <name>hbase.rootdir</name>
+        <value>hdfs://localhost:9000/hbase</value>
+    </property>
+
+    <property>
+        <name>hbase.cluster.distributed</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hbase.wal.provider</name>
+        <value>filesystem</value>
+    </property>
+
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>localhost</value>
+    </property>
+
+    <property>
+        <name>hbase.zookeeper.property.clientPort</name>
+        <value>2181</value>
+    </property>
+
+</configuration>
+jay@jay-Lenovo-Z580:~$ sudo ss -lntp | grep 2181
+[sudo] password for jay:         
+LISTEN 0      50                      *:2181             *:*    users:(("java",pid=6695,fd=333))                       
+jay@jay-Lenovo-Z580:~$ tail -30 /opt/hbase/logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+jay@jay-Lenovo-Z580:~$ tail -50 /opt/hbase/logs/hbase-jay-master-jay-Lenovo-Z580.out
+/opt/hbase/bin/hbase-daemon.sh: line 92: kill: (6817) - No such process
+
+jay@jay-Lenovo-Z580:~$ jps
+7459 Jps
+6695 HQuorumPeer
+6958 HRegionServer
+jay@jay-Lenovo-Z580:~$ start-dfs.sh
+Starting namenodes on [localhost]
+Starting datanodes
+Starting secondary namenodes [jay-Lenovo-Z580]
+jay@jay-Lenovo-Z580:~$ jps
+7585 NameNode
+7683 DataNode
+6695 HQuorumPeer
+7864 SecondaryNameNode
+8012 Jps
+6958 HRegionServer
+jay@jay-Lenovo-Z580:~$ stop-hbase.sh
+no hbase master found
+localhost: stopping zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+localhost: stopping zookeeper.
+jay@jay-Lenovo-Z580:~$ sleep 3
+jay@jay-Lenovo-Z580:~$ start-hbase.sh
+localhost: running zookeeper, logging to /opt/hbase/bin/../logs/hbase-jay-zookeeper-jay-Lenovo-Z580.out
+running master, logging to /opt/hbase/logs/hbase-jay-master-jay-Lenovo-Z580.out
+: regionserver running as process 6958. Stop it first.
+jay@jay-Lenovo-Z580:~$ jps
+7585 NameNode
+8546 HQuorumPeer
+7683 DataNode
+8803 Jps
+7864 SecondaryNameNode
+8668 HMaster
+6958 HRegionServer
+jay@jay-Lenovo-Z580:~$ hbase shell
+HBase Shell
+Use "help" to get list of supported commands.
+Use "exit" to quit this interactive shell.
+For Reference, please visit: https://hbase.apache.org/docs/shell
+Version 2.6.6, rd5f63f523c065f963992ea4e74db268d17816631, Thu Jun  4 11:07:52 PDT 2026
+Took 0.0034 seconds                                                                
+hbase:001:0> list
+TABLE                                                                              
+customer_profiles                                                                  
+1 row(s)
+Took 11.6410 seconds                                                               
+=> ["customer_profiles"]
+hbase:002:0> describe 'customer_profiles'
+Table customer_profiles is ENABLED                                                 
+customer_profiles, {TABLE_ATTRIBUTES => {METADATA => {'hbase.store.file-tracker.imp
+l' => 'DEFAULT'}}}                                                                 
+COLUMN FAMILIES DESCRIPTION                                                        
+{NAME => 'info', INDEX_BLOCK_ENCODING => 'NONE', VERSIONS => '1', KEEP_DELETED_CELL
+S => 'FALSE', DATA_BLOCK_ENCODING => 'NONE', TTL => 'FOREVER', MIN_VERSIONS => '0',
+ REPLICATION_SCOPE => '0', BLOOMFILTER => 'ROW', IN_MEMORY => 'false', COMPRESSION 
+=> 'NONE', BLOCKCACHE => 'true', BLOCKSIZE => '65536 B (64KB)'}                    
+
+1 row(s)
+Quota is disabled
+Took 0.2644 seconds                                                                
+hbase:003:0> put 'customer_profiles', 'CUST1001', 'info:name', 'Jay'
+Took 0.1886 seconds                                                                
+hbase:004:0> put 'customer_profiles', 'CUST1001', 'info:city', 'Pune'
+Took 0.0189 seconds                                                                
+hbase:005:0> put 'customer_profiles', 'CUST1001', 'info:mobile', '9876543210'
+Took 0.0171 seconds                                                                
+hbase:006:0> put 'customer_profiles', 'CUST1001', 'info:plan', 'Premium'
+Took 0.0142 seconds                                                                
+hbase:007:0> put 'customer_profiles', 'CUST1001', 'info:status', 'Active'
+Took 0.0093 seconds                                                                
+hbase:008:0> put 'customer_profiles', 'CUST1001', 'info:data_usage', '25GB'
+Took 0.0113 seconds                                                                
+hbase:009:0> put 'customer_profiles', 'CUST1002', 'info:name', 'Rahul'
+Took 0.0124 seconds                                                                
+hbase:010:0> put 'customer_profiles', 'CUST1002', 'info:city', 'Mumbai'
+Took 0.0101 seconds                                                                
+hbase:011:0> put 'customer_profiles', 'CUST1002', 'info:mobile', '9876543211'
+Took 0.0093 seconds                                                                
+hbase:012:0> put 'customer_profiles', 'CUST1002', 'info:plan', 'Basic'
+Took 0.0155 seconds                                                                
+hbase:013:0> put 'customer_profiles', 'CUST1002', 'info:status', 'Active'
+Took 0.0097 seconds                                                                
+hbase:014:0> put 'customer_profiles', 'CUST1002', 'info:data_usage', '10GB'
+Took 0.0193 seconds                                                                
+hbase:015:0> put 'customer_profiles', 'CUST1003', 'info:name', 'Priya'
+Took 0.0171 seconds                                                                
+hbase:016:0> put 'customer_profiles', 'CUST1003', 'info:city', 'Nagpur'
+Took 0.0140 seconds                                                                
+hbase:017:0> put 'customer_profiles', 'CUST1003', 'info:mobile', '9876543212'
+Took 0.0142 seconds                                                                
+hbase:018:0> put 'customer_profiles', 'CUST1003', 'info:plan', 'Premium'
+Took 0.0181 seconds                                                                
+hbase:019:0> put 'customer_profiles', 'CUST1003', 'info:status', 'Inactive'
+Took 0.0107 seconds                                                                
+hbase:020:0> put 'customer_profiles', 'CUST1003', 'info:data_usage', '5GB'
+Took 0.0144 seconds                                                                
+hbase:021:0> get 'customer_profiles', 'CUST1001'
+COLUMN                CELL                                                         
+ info:city            timestamp=2026-10-06T23:00:09.241, value=Pune                
+ info:data_usage      timestamp=2026-10-06T23:00:37.346, value=25GB                
+ info:mobile          timestamp=2026-10-06T23:00:16.945, value=9876543210          
+ info:name            timestamp=2026-10-06T23:00:02.662, value=Jay                 
+ info:plan            timestamp=2026-10-06T23:00:24.194, value=Premium             
+ info:status          timestamp=2026-10-06T23:00:30.853, value=Active              
+1 row(s)
+Took 0.1053 seconds                                                                
+hbase:022:0> scan 'customer_profiles'
+ROW                   COLUMN+CELL                                                  
+ CUST1001             column=info:city, timestamp=2026-10-06T23:00:09.241, value=Pu
+                      ne                                                           
+ CUST1001             column=info:data_usage, timestamp=2026-10-06T23:00:37.346, va
+                      lue=25GB                                                     
+ CUST1001             column=info:mobile, timestamp=2026-10-06T23:00:16.945, value=
+                      9876543210                                                   
+ CUST1001             column=info:name, timestamp=2026-10-06T23:00:02.662, value=Ja
+                      y                                                            
+ CUST1001             column=info:plan, timestamp=2026-10-06T23:00:24.194, value=Pr
+                      emium                                                        
+ CUST1001             column=info:status, timestamp=2026-10-06T23:00:30.853, value=
+                      Active                                                       
+ CUST1002             column=info:city, timestamp=2026-10-06T23:00:57.123, value=Mu
+                      mbai                                                         
+ CUST1002             column=info:data_usage, timestamp=2026-10-06T23:01:22.993, va
+                      lue=10GB                                                     
+ CUST1002             column=info:mobile, timestamp=2026-10-06T23:01:02.759, value=
+                      9876543211                                                   
+ CUST1002             column=info:name, timestamp=2026-10-06T23:00:50.060, value=Ra
+                      hul                                                          
+ CUST1002             column=info:plan, timestamp=2026-10-06T23:01:09.568, value=Ba
+                      sic                                                          
+ CUST1002             column=info:status, timestamp=2026-10-06T23:01:16.927, value=
+                      Active                                                       
+ CUST1003             column=info:city, timestamp=2026-10-06T23:01:38.140, value=Na
+                      gpur                                                         
+ CUST1003             column=info:data_usage, timestamp=2026-10-06T23:02:05.089, va
+                      lue=5GB                                                      
+ CUST1003             column=info:mobile, timestamp=2026-10-06T23:01:43.320, value=
+                      9876543212                                                   
+ CUST1003             column=info:name, timestamp=2026-10-06T23:01:32.127, value=Pr
+                      iya                                                          
+ CUST1003             column=info:plan, timestamp=2026-10-06T23:01:49.693, value=Pr
+                      emium                                                        
+ CUST1003             column=info:status, timestamp=2026-10-06T23:01:57.428, value=
+                      Inactive                                                     
+ CUST2001             column=info:city, timestamp=2026-10-06T15:06:54.516, value=Ba
+                      ngalore                                                      
+ CUST2001             column=info:data_usage, timestamp=2026-10-06T15:06:54.710, va
+                      lue=20GB                                                     
+ CUST2001             column=info:mobile, timestamp=2026-10-06T15:06:54.568, value=
+                      9988776655                                                   
+ CUST2001             column=info:name, timestamp=2026-10-06T15:06:54.375, value=Ro
+                      han                                                          
+ CUST2001             column=info:plan, timestamp=2026-10-06T15:06:54.614, value=5G
+                       Premium                                                     
+ CUST2001             column=info:status, timestamp=2026-10-06T15:06:54.670, value=
+                      Active                                                       
+ CUST2002             column=info:city, timestamp=2026-10-06T15:06:54.777, value=Pu
+                      ne                                                           
+ CUST2002             column=info:data_usage, timestamp=2026-10-06T15:06:54.920, va
+                      lue=15GB                                                     
+ CUST2002             column=info:mobile, timestamp=2026-10-06T15:06:54.810, value=
+                      9988776656                                                   
+ CUST2002             column=info:name, timestamp=2026-10-06T15:06:54.737, value=Sn
+                      eha                                                          
+ CUST2002             column=info:plan, timestamp=2026-10-06T15:06:54.843, value=5G
+                       Basic                                                       
+ CUST2002             column=info:status, timestamp=2026-10-06T15:06:54.882, value=
+                      Active                                                       
+ CUST2003             column=info:city, timestamp=2026-10-06T15:06:55.004, value=Mu
+                      mbai                                                         
+ CUST2003             column=info:data_usage, timestamp=2026-10-06T15:06:55.191, va
+                      lue=8GB                                                      
+ CUST2003             column=info:mobile, timestamp=2026-10-06T15:06:55.027, value=
+                      9988776657                                                   
+ CUST2003             column=info:name, timestamp=2026-10-06T15:06:54.972, value=Vi
+                      kas                                                          
+ CUST2003             column=info:plan, timestamp=2026-10-06T15:06:55.053, value=4G
+                       Premium                                                     
+ CUST2003             column=info:status, timestamp=2026-10-06T15:06:55.150, value=
+                      Inactive                                                     
+6 row(s)
+Took 0.1711 seconds                                                                
+hbase:023:0> count 'customer_profiles'
+6 row(s)
+Took 0.0810 seconds                                                                
+=> 6
+hbase:024:0> put 'customer_profiles', 'CUST1001', 'info:plan', 'Gold'
+Took 0.0087 seconds                                                                
+hbase:025:0> get 'customer_profiles', 'CUST1001'
+COLUMN                CELL                                                         
+ info:city            timestamp=2026-10-06T23:00:09.241, value=Pune                
+ info:data_usage      timestamp=2026-10-06T23:00:37.346, value=25GB                
+ info:mobile          timestamp=2026-10-06T23:00:16.945, value=9876543210          
+ info:name            timestamp=2026-10-06T23:00:02.662, value=Jay                 
+ info:plan            timestamp=2026-10-06T23:04:21.637, value=Gold                
+ info:status          timestamp=2026-10-06T23:00:30.853, value=Active              
+1 row(s)
+Took 0.0335 seconds                                                                
+hbase:026:0> delete 'customer_profiles', 'CUST1003', 'info:data_usage'
+Took 0.0241 seconds                                                                
+hbase:027:0> get 'customer_profiles', 'CUST1003'
+COLUMN                CELL                                                         
+ info:city            timestamp=2026-10-06T23:01:38.140, value=Nagpur              
+ info:data_usage      timestamp=2026-10-04T23:33:21.600, value=15 GB               
+ info:mobile          timestamp=2026-10-06T23:01:43.320, value=9876543212          
+ info:name            timestamp=2026-10-06T23:01:32.127, value=Priya               
+ info:plan            timestamp=2026-10-06T23:01:49.693, value=Premium             
+ info:status          timestamp=2026-10-06T23:01:57.428, value=Inactive            
+1 row(s)
+Took 0.0348 seconds                                                                
+hbase:028:0> deleteall 'customer_profiles', 'CUST1003'
+Took 0.0073 seconds                                                                
+hbase:029:0> scan 'customer_profiles'
+ROW                   COLUMN+CELL                                                  
+ CUST1001             column=info:city, timestamp=2026-10-06T23:00:09.241, value=Pu
+                      ne                                                           
+ CUST1001             column=info:data_usage, timestamp=2026-10-06T23:00:37.346, va
+                      lue=25GB                                                     
+ CUST1001             column=info:mobile, timestamp=2026-10-06T23:00:16.945, value=
+                      9876543210                                                   
+ CUST1001             column=info:name, timestamp=2026-10-06T23:00:02.662, value=Ja
+                      y                                                            
+ CUST1001             column=info:plan, timestamp=2026-10-06T23:04:21.637, value=Go
+                      ld                                                           
+ CUST1001             column=info:status, timestamp=2026-10-06T23:00:30.853, value=
+                      Active                                                       
+ CUST1002             column=info:city, timestamp=2026-10-06T23:00:57.123, value=Mu
+                      mbai                                                         
+ CUST1002             column=info:data_usage, timestamp=2026-10-06T23:01:22.993, va
+                      lue=10GB                                                     
+ CUST1002             column=info:mobile, timestamp=2026-10-06T23:01:02.759, value=
+                      9876543211                                                   
+ CUST1002             column=info:name, timestamp=2026-10-06T23:00:50.060, value=Ra
+                      hul                                                          
+ CUST1002             column=info:plan, timestamp=2026-10-06T23:01:09.568, value=Ba
+                      sic                                                          
+ CUST1002             column=info:status, timestamp=2026-10-06T23:01:16.927, value=
+                      Active                                                       
+ CUST2001             column=info:city, timestamp=2026-10-06T15:06:54.516, value=Ba
+                      ngalore                                                      
+ CUST2001             column=info:data_usage, timestamp=2026-10-06T15:06:54.710, va
+                      lue=20GB                                                     
+ CUST2001             column=info:mobile, timestamp=2026-10-06T15:06:54.568, value=
+                      9988776655                                                   
+ CUST2001             column=info:name, timestamp=2026-10-06T15:06:54.375, value=Ro
+                      han                                                          
+ CUST2001             column=info:plan, timestamp=2026-10-06T15:06:54.614, value=5G
+                       Premium                                                     
+ CUST2001             column=info:status, timestamp=2026-10-06T15:06:54.670, value=
+                      Active                                                       
+ CUST2002             column=info:city, timestamp=2026-10-06T15:06:54.777, value=Pu
+                      ne                                                           
+ CUST2002             column=info:data_usage, timestamp=2026-10-06T15:06:54.920, va
+                      lue=15GB                                                     
+ CUST2002             column=info:mobile, timestamp=2026-10-06T15:06:54.810, value=
+                      9988776656                                                   
+ CUST2002             column=info:name, timestamp=2026-10-06T15:06:54.737, value=Sn
+                      eha                                                          
+ CUST2002             column=info:plan, timestamp=2026-10-06T15:06:54.843, value=5G
+                       Basic                                                       
+ CUST2002             column=info:status, timestamp=2026-10-06T15:06:54.882, value=
+                      Active                                                       
+ CUST2003             column=info:city, timestamp=2026-10-06T15:06:55.004, value=Mu
+                      mbai                                                         
+ CUST2003             column=info:data_usage, timestamp=2026-10-06T15:06:55.191, va
+                      lue=8GB                                                      
+ CUST2003             column=info:mobile, timestamp=2026-10-06T15:06:55.027, value=
+                      9988776657                                                   
+ CUST2003             column=info:name, timestamp=2026-10-06T15:06:54.972, value=Vi
+                      kas                                                          
+ CUST2003             column=info:plan, timestamp=2026-10-06T15:06:55.053, value=4G
+                       Premium                                                     
+ CUST2003             column=info:status, timestamp=2026-10-06T15:06:55.150, value=
+                      Inactive                                                     
+5 row(s)
+Took 0.1249 seconds                                                                
+hbase:030:0> disable 'customer_profiles'
+Took 1.2256 seconds                                                                
+hbase:031:0> drop 'customer_profiles'
+Took 0.3938 seconds                                                                
+hbase:032:0> list
+TABLE                                                                              
+0 row(s)
+Took 0.0131 seconds                                                                
+=> []
+hbase:033:0> 
+
+
+
